@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Wumpus World: The Ultimate Survival Challenge</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Alegreya+Sans:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#090d18;--p:#121a2c;--p2:#1b2640;--ink:#e6e9f2;--mute:#8e98b3;--gold:#f2c14e;--em:#3ddc97;--cy:#4cc9f0;--cr:#e5484d;--line:#2a3550;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at 50% -10%,#1c2a4d,var(--bg) 60%);color:var(--ink);font:16px/1.45 'Alegreya Sans',system-ui,sans-serif;min-height:100vh}
+h1,h2,h3{font-family:'Cinzel',Georgia,serif;margin:0}
+h1{font-size:clamp(1.6rem,5vw,2.6rem);color:var(--gold);text-shadow:0 0 18px #f2c14e66}
+main{max-width:1100px;margin:0 auto;padding:16px}
+header{display:flex;align-items:center;gap:14px;margin-bottom:12px}
+.torch{font-size:2rem;animation:fl 1.1s infinite alternate}.calm *{animation:none!important;transition:none!important}
+@keyframes fl{from{filter:drop-shadow(0 0 4px #f90);transform:scale(1)}to{filter:drop-shadow(0 0 14px #fc3);transform:scale(1.1) rotate(3deg)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.hide{display:none!important}
+.card{background:var(--p);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:800px){.grid2{grid-template-columns:1fr}}
+button,select,input{font:inherit;color:var(--ink);background:var(--p2);border:1px solid var(--line);border-radius:8px;padding:8px 12px}
+button{cursor:pointer}button:hover:not(:disabled){border-color:var(--gold)}button:disabled{opacity:.4;cursor:not-allowed}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--cy);outline-offset:2px}
+button.pri{background:var(--gold);color:#1a1405;font-weight:700;border-color:var(--gold)}
+button.on{border-color:var(--em);box-shadow:0 0 10px #3ddc9755}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0}
+.lv button{flex:1;min-width:110px;text-align:left}.lv small{display:block;color:var(--mute)}
+label{color:var(--mute)}
+#board{display:grid;gap:3px;width:100%;max-width:640px;margin:0 auto;touch-action:manipulation}
+.c{aspect-ratio:1;background:#0d1426;border:1px solid #1d2842;border-radius:6px;display:flex;align-items:center;justify-content:center;position:relative;font-size:calc(min(78vw,640px)/var(--n)*.55);line-height:1;transition:background .25s}
+.c.v{background:#182544}.c.s{background:#0f2a2a;border-color:#1f5b4a}.c.st{outline:2px solid var(--gold)}
+.c.a{background:#22345e;box-shadow:inset 0 0 14px var(--cy),0 0 10px #4cc9f066}
+.c.hl{box-shadow:inset 0 0 0 2px var(--em)}.c.bad{background:#3a1520}
+.c .pc{position:absolute;top:1px;left:2px;font-size:.38em}.c .rk{position:absolute;bottom:1px;right:3px;font-size:.3em;color:var(--mute);font-family:sans-serif}
+.c .mk{opacity:.5;font-size:.6em}
+.bar{display:flex;flex-wrap:wrap;gap:6px}.bar span{background:var(--p2);border:1px solid var(--line);border-radius:20px;padding:2px 10px}
+.bar b{color:var(--gold)}
+.dp{display:grid;grid-template-columns:repeat(3,52px);gap:6px;justify-content:center}.dp button{height:48px;font-size:1.2rem}
+#log{height:140px;overflow:auto;font-size:.92rem}#log p{margin:2px 0}#log .o{color:var(--mute)}
+.f{color:var(--cy)}.d{color:var(--em)}.r{color:var(--cr)}
+table{width:100%;border-collapse:collapse;font-size:.92rem}td,th{padding:4px 6px;border-bottom:1px solid var(--line);text-align:left}
+#ov{position:fixed;inset:0;background:#000a;display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}
+#ov .card{max-width:520px;width:100%;max-height:90vh;overflow:auto}
+.win{color:var(--em)}.lose{color:var(--cr)}
+</style></head><body>
+<main>
+<header><span class="torch">🔥</span><div><h1>Wumpus World</h1><div style="color:var(--mute)">The Ultimate Survival Challenge</div></div><span class="torch">🔥</span></header>
+
+<section id="menu">
+ <div class="grid2">
+ <div class="card"><h3>Choose difficulty</h3>
+  <div class="row lv" id="lvs"></div>
+  <div id="cust" class="row hide">
+   <label>Size <input id="cs" type="number" min="4" max="20" value="7" style="width:70px"></label>
+   <label>Wumpuses <input id="cw" type="number" min="1" max="20" value="2" style="width:70px"></label>
+   <label>Pits <input id="cp" type="number" min="0" max="150" value="8" style="width:70px"></label>
+   <label>Arrows <input id="ca" type="number" min="0" max="10" value="2" style="width:70px"></label>
+  </div>
+  <p id="prev" style="color:var(--mute)"></p><p id="err" class="r"></p>
+ </div>
+ <div class="card"><h3>Mode</h3>
+  <div class="row" id="modes"></div>
+  <div class="row"><label>Nickname <input id="nick" maxlength="14" style="width:140px"></label></div>
+  <div class="row"><label>Seed <input id="seed" placeholder="random" style="width:110px"></label><button id="daily">Daily seed</button></div>
+  <div class="row"><label><input type="checkbox" id="risk" checked> AI may take calculated risks</label></div>
+  <div class="row"><label><input type="checkbox" id="calm"> Reduced motion</label></div>
+  <button class="pri" id="play" style="width:100%;margin-top:8px">Play game</button>
+ </div></div>
+ <div class="row"><button id="b-lb">Leaderboard &amp; statistics</button><button id="b-how">How to play</button></div>
+</section>
+
+<section id="game" class="hide">
+ <div class="bar card" id="bar"></div>
+ <div class="grid2">
+  <div><div id="board"></div>
+   <div class="row" style="justify-content:center;color:var(--mute);font-size:.85rem">🧙 you · 🚪 entrance · 💰 gold · 🕳️ pit · 👹 Wumpus · 💨 breeze · ☠️ stench · ✨ glitter · green = proven safe · ? = possible hazard</div></div>
+  <div>
+   <div class="card"><div class="row" id="pcs"></div><div id="log"></div></div>
+   <div class="card" id="ctl"></div>
+   <div class="card" id="ai"></div>
+   <div class="card" id="sc"></div>
+  </div></div>
+</section>
+
+<section id="lb" class="hide">
+ <div class="card"><h2>LOCAL LEADERBOARD</h2><p style="color:var(--mute)">Stored in this browser only. There is no online ranking.</p>
+ <div class="row"><select id="f-l"></select><select id="f-m"><option value="">All modes</option><option value="manual">Manual</option><option value="assist">Assisted</option><option value="ai">AI</option></select></div>
+ <div id="lbt"></div></div>
+ <div class="card"><h2>Statistics</h2><div id="stt"></div></div>
+ <div class="row"><button id="b-back">Back</button><button id="b-clr">Clear all records</button></div>
+</section>
+
+<section id="how" class="hide">
+ <div class="card"><h2>How to play</h2>
+ <p>Find the gold 💰, then climb out at the entrance 🚪. Pits and Wumpuses kill you. <b>Breeze</b> = a pit is next door. <b>Stench</b> = a Wumpus is next door. <b>Glitter</b> = gold here. <b>Bump</b> = wall. <b>Scream</b> = a Wumpus died.</p>
+ <p><b>Keys:</b> arrows/WASD move, Space grabs gold, F then a direction shoots, C climbs, H hint, P pause. An arrow flies until it hits a Wumpus or a wall.</p>
+ <p><b>Scoring:</b> gold +1000, exit with gold +1000, kill +200, new safe cell +20, hint −25, revisit (without gold) −5, wall −5, missed arrow −50, death −500. Multipliers: ×1 / 1.2 / 1.5 / 2 / 3.</p>
+ <h3>The AI agent</h3>
+ <p>It starts knowing only the grid size. After every percept it deduces: no breeze means neighbours have no pits, no stench means neighbours have no Wumpus. A cell is <b>safe</b> only when both are ruled out. If a percept cell has exactly one possible source left, that hazard is <b>confirmed</b>. It uses BFS over safe cells to reach the nearest unvisited safe cell, to reach a firing position, and to walk home with the gold. If stuck, it either estimates risk for frontier cells (each shown as a percentage, which is a rough heuristic, not an exact probability) or goes home.</p>
+ <p>Glossary: <b>percept</b> what the agent senses; <b>inference</b> a conclusion from percepts; <b>frontier</b> unknown cells beside visited ones.</p></div>
+ <button id="b-back2">Back</button>
+</section>
+</main>
+<div id="ov" class="hide"></div>
+
+<script>
+'use strict';
+const $=s=>document.querySelector(/^[#.\[]/.test(s)?s:'#'+s),K=(x,y)=>x+','+y,P=c=>c.split(',').map(Number);
+const nb=(n,x,y)=>[[x,y+1],[x,y-1],[x-1,y],[x+1,y]].filter(([a,b])=>a>=0&&b>=0&&a<n&&b<n);
+function rng(s){return()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const shuf=(a,r)=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}};
+const LV={1:{n:'Beginner',size:4,w:1,p:2,a:2,m:1,hint:99},2:{n:'Explorer',size:6,w:1,p:5,a:2,m:1.2,hint:5},3:{n:'Adventurer',size:8,w:2,p:9,a:2,m:1.5,hint:3},4:{n:'Expert',size:10,w:2,p:15,a:2,m:2,hint:1},5:{n:'Master',size:12,w:3,p:24,a:3,m:3,hint:0},0:{n:'Custom',size:7,w:2,p:8,a:2,m:1,hint:3}};
+let S={};try{S=JSON.parse(localStorage.getItem('wwv1'))||{}}catch(e){}
+S.scores=S.scores||[];S.nick=S.nick||'Explorer';
+const save=()=>{try{localStorage.setItem('wwv1',JSON.stringify(S))}catch(e){}};
+function solvable(n,gold,wum,pit){const q=['0,0'],seen=new Set(q);while(q.length){const c=q.shift();if(c===gold)return true;nb(n,...P(c)).map(([a,b])=>K(a,b)).forEach(x=>{if(!seen.has(x)&&!wum.has(x)&&!pit.has(x)){seen.add(x);q.push(x)}})}return false}
+function mkWorld(cfg,seed){
+ const n=cfg.size;
+ for(let t=0;t<300;t++){
+  const r=rng(seed+t*7919),all=[];
+  for(let x=0;x<n;x++)for(let y=0;y<n;y++)if(x+y)all.push(K(x,y));
+  shuf(all,r);
+  const gold=all.pop(),pool=all.filter(c=>c!=='0,1'&&c!=='1,0');
+  const wum=new Set(pool.slice(0,cfg.w)),pit=new Set(pool.slice(cfg.w,cfg.w+cfg.p));
+  if(!solvable(n,gold,wum,pit))continue;
+  const w={n,wum,pit,pos:[0,0],hasGold:false,goldAt:gold,arrows:cfg.a,
+   percept(x){const[px,py]=w.pos,a=nb(n,px,py).map(([i,j])=>K(i,j));
+    return{breeze:a.some(q=>pit.has(q)),stench:a.some(q=>wum.has(q)),glitter:w.goldAt===K(px,py),bump:false,scream:false,arrows:w.arrows,hasGold:w.hasGold,...x}},
+   shoot(d){w.arrows--;let[x,y]=w.pos;for(;;){x+=d[0];y+=d[1];if(x<0||y<0||x>=n||y>=n)return false;if(wum.has(K(x,y))){wum.delete(K(x,y));return true}}}};
+  return w;
+ }
+ throw new Error('Could not generate a solvable world');
+}
+function Agent(cfg,allowRisk){
+ const n=cfg.size,noP=new Set(),noW=new Set(),vis=new Map(),kb={pos:[0,0],gold:false,arrows:cfg.a,kills:0};
+ const N=c=>nb(n,...P(c)).map(([a,b])=>K(a,b));
+ const noWf=c=>noW.has(c)||kb.kills>=cfg.w,safe=c=>noP.has(c)&&noWf(c);
+ const conf=(key,no)=>{const s=new Set();vis.forEach((p,c)=>{if(p[key]&&!p.stale){const q=N(c).filter(x=>!no(x));if(q.length===1)s.add(q[0])}});return s};
+ const maybe=(key,no)=>{const s=new Set();vis.forEach((p,c)=>{if(p[key])N(c).forEach(x=>{if(!no(x))s.add(x)})});return s};
+ const risk=c=>{let a=0,b=0;N(c).forEach(v=>{const p=vis.get(v);if(!p)return;if(p.breeze&&!noP.has(c))a=Math.max(a,1/N(v).filter(x=>!noP.has(x)).length);if(p.stench&&!noWf(c))b=Math.max(b,1/N(v).filter(x=>!noWf(x)).length)});return 1-(1-a)*(1-b)};
+ const bfs=(s,goal,ok)=>{if(goal(s))return[];const prev=new Map([[s,null]]),q=[s];while(q.length){const c=q.shift();for(const x of N(c)){if(prev.has(x)||!ok(x))continue;prev.set(x,c);if(goal(x)){const p=[];for(let t=x;t!==s;t=prev.get(t))p.unshift(t);return p}q.push(x)}}return null};
+ return{
+  observe(a,pc){
+   if(a&&a.t==='move'&&!pc.bump)kb.pos=a.to||[kb.pos[0]+a.d[0],kb.pos[1]+a.d[1]];
+   kb.gold=pc.hasGold;kb.arrows=pc.arrows;
+   if(pc.scream){kb.kills++;vis.forEach(v=>v.stale=true);if(a&&a.to)noW.add(K(...a.to))}
+   const c=K(...kb.pos);vis.set(c,{breeze:pc.breeze,stench:pc.stench,glitter:pc.glitter});noP.add(c);noW.add(c);
+   if(!pc.breeze)N(c).forEach(x=>noP.add(x));if(!pc.stench)N(c).forEach(x=>noW.add(x));
+  },
+  view(){const sf=[];for(let x=0;x<n;x++)for(let y=0;y<n;y++)if(safe(K(x,y)))sf.push(K(x,y));
+   return{pos:kb.pos,vis,safe:new Set(sf),mP:maybe('breeze',c=>noP.has(c)),mW:kb.kills>=cfg.w?new Set():maybe('stench',noWf),cP:conf('breeze',c=>noP.has(c)),cW:kb.kills>=cfg.w?new Set():conf('stench',noWf),risk}},
+  decide(){
+   const here=K(...kb.pos),cur=vis.get(here)||{},cw=conf('stench',noWf);
+   const go=(p,why,tag,tg)=>({t:'move',to:P(p[0]),reason:why,tag,target:tg});
+   if(cur.glitter&&!kb.gold)return{t:'grab',reason:'Glitter percept: the gold is in this cell. Picking it up.',tag:'fact'};
+   if(kb.gold){if(here==='0,0')return{t:'climb',reason:'Gold in hand and standing on the entrance. Climbing out.',tag:'fact'};
+    const p=bfs(here,c=>c==='0,0',safe);if(p)return go(p,'Treasure acquired. BFS gives the shortest route home through proven-safe cells.','deduction','0,0')}
+   let p=bfs(here,c=>!vis.has(c)&&safe(c),safe);
+   if(p)return go(p,'Nearest unvisited cell proven safe by inference is '+p[p.length-1]+'. Going there (BFS).','deduction',p[p.length-1]);
+   if(kb.arrows>0&&cw.size){for(const t of cw){const adj=N(t).filter(c=>safe(c));
+     if(adj.includes(here)){const[tx,ty]=P(t),[x,y]=kb.pos;return{t:'shoot',d:[tx-x,ty-y],to:[tx,ty],reason:'A Wumpus is confirmed at '+t+' (its stench cell has no other candidate). Shooting it.',tag:'deduction'}}
+     const q=bfs(here,c=>adj.includes(c),safe);if(q)return go(q,'No safe unexplored cells remain, and a Wumpus is confirmed at '+t+'. Moving to a firing position.','deduction',t)}}
+   if(allowRisk){const cP=conf('breeze',c=>noP.has(c)),cand=[];
+    vis.forEach((_,v)=>N(v).forEach(c=>{if(!vis.has(c)&&!safe(c)&&!cP.has(c)&&!cw.has(c)&&!cand.includes(c))cand.push(c)}));
+    cand.sort((a,b)=>risk(a)-risk(b));
+    for(const c of cand){const ng=N(c).filter(v=>vis.has(v)),rs=Math.round(risk(c)*100)+'%';
+     if(ng.includes(here))return{t:'move',to:P(c),reason:'No safe cell is left. Calculated risk: stepping into '+c+' (estimated hazard risk about '+rs+').',tag:'risk',target:c};
+     const q=bfs(here,x=>ng.includes(x),safe);if(q)return go(q,'No safe cell is left. Walking to '+q[q.length-1]+' to take a calculated risk on '+c+' (about '+rs+').','risk',c)}}
+   if(here==='0,0')return{t:'climb',reason:'No safe progress is possible. Leaving without the gold.',tag:'fact'};
+   p=bfs(here,c=>c==='0,0',safe);
+   return p?go(p,'No further safe progress (risk-taking is off or exhausted). Returning to the entrance.','deduction','0,0'):{t:'climb',reason:'Nothing left to do.',tag:'fact'};
+  }};
+}
+let G=null,timer=null,sel=2,mode='manual',aim=false;
+const SCORE={gold:1000,exit:1000,kill:200,cell:20,hint:25,rev:5,bump:5,miss:50,die:500};
+function start(cfg,seed,m,lvl){
+ clearInterval(timer);aim=false;
+ G={cfg,seed,mode:m,lvl,w:mkWorld(cfg,seed),ag:Agent(cfg,$('risk').checked),L:{Treasure:0,Exploration:0,'Wumpus kills':0,'Exit bonus':0,Penalties:0},moves:0,t0:Date.now(),log:[],over:false,paused:false,hints:cfg.hint,shots:0,rev:0,risky:0,hl:null,dec:null,expl:new Set(['0,0']),showAI:m!=='manual',reveal:false,auto:false,speed:700};
+ G.pc=G.w.percept();G.ag.observe(null,G.pc);
+ say('You enter the cave. Seed '+seed+'.');say(pcText(G.pc));
+ show('game');buildCtl();render();
+}
+const say=t=>{G.log.push(t);};
+const pcText=p=>'Percepts: '+([p.breeze&&'Breeze',p.stench&&'Stench',p.glitter&&'Glitter',p.bump&&'Bump',p.scream&&'Scream'].filter(Boolean).join(', ')||'none');
+const add=(k,v,why)=>{G.L[k]+=v;say(why+' ('+(v>0?'+':'')+v+')')};
+const base=()=>Object.values(G.L).reduce((a,b)=>a+b,0);
+const fin=()=>{const b=base();return Math.round(b>0?b*G.cfg.m:b)};
+function exec(a){
+ if(!G||G.over||G.paused)return;const w=G.w;let extra={};G.hl=null;
+ if(a.t==='move'){
+  G.moves++;const[x,y]=w.pos,nx=a.to?a.to[0]:x+a.d[0],ny=a.to?a.to[1]:y+a.d[1];
+  if(nx<0||ny<0||nx>=w.n||ny>=w.n){extra.bump=true;add('Penalties',-SCORE.bump,'Bump! You hit a wall')}
+  else{w.pos=[nx,ny];const c=K(nx,ny);
+   if(w.pit.has(c)||w.wum.has(c)){return end(false,w.pit.has(c)?'You fell into a bottomless pit.':'The Wumpus devoured you.',true)}
+   if(!G.expl.has(c)){G.expl.add(c);add('Exploration',SCORE.cell,'New safe cell '+c)}
+   else if(!w.hasGold){G.rev++;add('Penalties',-SCORE.rev,'Revisited cell '+c)}}
+ }else if(a.t==='shoot'){
+  if(w.arrows<1){say('No arrows left.');return render()}
+  G.shots++;const hit=w.shoot(a.d);extra.scream=hit;
+  hit?add('Wumpus kills',SCORE.kill,'SCREAM! The Wumpus is dead'):add('Penalties',-SCORE.miss,'Arrow missed');
+ }else if(a.t==='grab'){
+  if(w.goldAt===K(...w.pos)){w.hasGold=true;w.goldAt=null;add('Treasure',SCORE.gold,'You grab the gold')}else say('Nothing to grab here.');
+ }else if(a.t==='climb'){
+  if(K(...w.pos)!=='0,0'){say('You can only climb out at the entrance.');return render()}
+  if(w.hasGold){add('Exit bonus',SCORE.exit,'You escape with the gold');return end(true,'You escaped with the treasure!')}
+  return end(false,'You left the cave empty-handed.')
+ }
+ G.pc=w.percept(extra);G.ag.observe(a,G.pc);say(pcText(G.pc));render();
+}
+function end(win,msg,died){
+ if(died)add('Penalties',-SCORE.die,'You died');
+ G.over=true;G.win=win;G.msg=msg;clearInterval(timer);G.reveal=true;G.secs=Math.round((Date.now()-G.t0)/1000);
+ const rec={nick:S.nick,score:fin(),base:base(),lvl:G.lvl,size:G.cfg.size,mode:G.mode,win,secs:G.secs,moves:G.moves,gold:G.w.hasGold?1:0,date:new Date().toISOString().slice(0,10)};
+ const prior=S.scores.filter(r=>r.lvl===G.lvl&&r.mode===G.mode&&r.size===G.cfg.size).reduce((m,r)=>Math.max(m,r.score),-Infinity);
+ G.best=Math.max(prior,rec.score);S.scores.push(rec);S.scores=S.scores.slice(-300);save();
+ render();showResult();
+}
+const aiStep=()=>{if(!G||G.over||G.paused)return;const d=G.ag.decide();G.dec=d;if(d.tag==='risk')G.risky++;say('AI: '+d.reason);exec(d)};
+function hint(){if(G.over||G.paused)return;if(G.hints<1)return say('No hints left.'),render();G.hints--;add('Penalties',-SCORE.hint,'Hint used');const d=G.ag.decide();G.dec=d;G.hl=d.to?K(...d.to):null;say('Hint: '+d.reason);render()}
+function setAuto(on){clearInterval(timer);G.auto=on;if(on)timer=setInterval(aiStep,G.speed);render()}
+function render(){
+ const g=G,n=g.cfg.size,v=g.ag.view(),b=$('board');
+ b.style.gridTemplateColumns='repeat(' + n + ',1fr)';b.style.setProperty('--n',n);
+ let h='';
+ for(let y=n-1;y>=0;y--)for(let x=0;x<n;x++){
+  const c=K(x,y),isA=c===K(...g.w.pos),vi=v.vis.has(c);let cls='c',ic='',mk='',pc='',rk='';
+  if(vi)cls+=' v';
+  if(g.showAI&&!vi&&v.safe.has(c))cls+=' s';
+  if(c===g.hl)cls+=' hl';
+  if(g.reveal){if(g.w.pit.has(c))ic='🕳️';else if(g.w.wum.has(c))ic='👹';else if(g.w.goldAt===c)ic='💰';else if(c==='0,0')ic='🚪'}
+  else{if(c==='0,0')ic='🚪';
+   if(g.showAI&&!vi){if(v.cP.has(c))ic='🕳️';else if(v.cW.has(c))ic='👹';else if(v.mP.has(c)||v.mW.has(c)){mk='<span class="mk">?</span>';rk='<span class="rk">'+Math.round(v.risk(c)*100)+'%</span>'}}}
+  if(vi){const p=v.vis.get(c);pc=(p.breeze?'💨':'')+(p.stench?'☠️':'')+(p.glitter&&g.w.goldAt===c?'✨':'')}
+  if(isA){cls+=' a';ic='🧙'}
+  h+='<div class="'+cls+'" role="img" aria-label="cell '+c+'">'+(pc?'<span class="pc">'+pc+'</span>':'')+ic+mk+rk+'</div>'}
+ b.innerHTML=h;
+ const el=Math.round(((g.over?g.t0+g.secs*1000:Date.now())-g.t0)/1000);
+ $('bar').innerHTML=['Score <b>'+fin()+'</b>','Moves <b>'+g.moves+'</b>','Arrows <b>'+g.pc.arrows+'</b>','Hints <b>'+(g.hints>90?'∞':g.hints)+'</b>',LV[g.lvl].n+' '+n+'×'+n,'Gold <b>'+(g.w.hasGold?'✓':'–')+'</b>','Seed '+g.seed,g.paused?'<b>PAUSED</b>':''].filter(Boolean).map(s=>'<span>'+s+'</span>').join('');
+ $('pcs').innerHTML=['breeze','stench','glitter','bump','scream'].map(k=>'<span style="padding:2px 8px;border-radius:12px;border:1px solid var(--line);'+(g.pc[k]?'background:var(--gold);color:#111;font-weight:700':'color:var(--mute)')+'">'+k+'</span>').join('');
+ const lg=$('log');lg.innerHTML=g.log.slice(-40).map((t,i,a)=>'<p class="'+(i<a.length-1?'o':'')+'">'+t.replace(/</g,'&lt;')+'</p>').join('');lg.scrollTop=lg.scrollHeight;
+ const L=Object.entries(g.L).map(([k,x])=>'<tr><td>'+k+'</td><td>'+x+'</td></tr>').join('');
+ $('sc').innerHTML='<h3>Score breakdown</h3><table>'+L+'<tr><td>Base</td><td>'+base()+'</td></tr><tr><td>Difficulty ×'+g.cfg.m+'</td><td><b>'+fin()+'</b></td></tr></table>';
+ const list=s=>[...s].join(' ')||'none',kn=g.mode==='ai'||g.showAI;
+ $('ai').innerHTML='<h3>AI reasoning</h3>'+(kn?'<p><span class="f">Facts:</span> position '+v.pos.join(',')+'; visited '+v.vis.size+' cells; percept here: '+pcText(g.pc).slice(10)+'.</p><p><span class="d">Deductions:</span> proven-safe cells '+v.safe.size+'; confirmed pits: '+list(v.cP)+'; confirmed Wumpus: '+list(v.cW)+'.</p><p><span class="r">Hypotheses:</span> possible pits: '+list(v.mP)+'; possible Wumpus: '+list(v.mW)+'.</p>'+(g.dec?'<p>Action: <b>'+g.dec.t+'</b>'+(g.dec.target?' → '+g.dec.target:'')+'<br><span class="'+(g.dec.tag==='risk'?'r':g.dec.tag==='fact'?'f':'d')+'">'+(g.dec.tag==='risk'?'Calculated risk. ':'')+'</span>'+g.dec.reason+'</p>':''):'<p style="color:var(--mute)">AI knowledge hidden. Tick “Show AI knowledge” to see inferences.</p>');
+ const dis=g.over;$('ctl').querySelectorAll('button[data-k]').forEach(x=>{x.disabled=dis&&x.dataset.k!=='x'});
+ const au=$('b-auto');if(au)au.textContent=g.auto?'⏸ Stop':'▶ Autoplay';
+ const am=$('b-aim');if(am)am.classList.toggle('on',aim);
+}
+function buildCtl(){
+ const g=G,ai=g.mode==='ai';
+ $('ctl').innerHTML=(ai?'<div class="row"><button class="pri" data-k="1" id="b-next">Next action</button><button data-k="1" id="b-auto">▶ Autoplay</button><label>Speed <input type="range" id="spd" min="100" max="1500" value="'+(1600-g.speed)+'"></label></div>':
+ '<div class="dp"><span></span><button data-k="1" data-d="0,1">▲</button><span></span><button data-k="1" data-d="-1,0">◀</button><button data-k="1" data-d="0,-1">▼</button><button data-k="1" data-d="1,0">▶</button></div><div class="row" style="justify-content:center"><button data-k="1" id="b-aim">🏹 Aim (F)</button><button data-k="1" id="b-grab">Grab (Space)</button><button data-k="1" id="b-climb">Climb (C)</button>'+(g.mode==='assist'?'<button data-k="1" id="b-hint">Hint (H)</button>':'')+'</div>')+
+ '<div class="row" style="justify-content:center"><label><input type="checkbox" id="showai" '+(g.showAI?'checked':'')+'> Show AI knowledge</label><button data-k="x" id="b-pause">Pause (P)</button><button data-k="x" id="b-rst">Restart</button><button data-k="x" id="b-exit">Exit</button></div>';
+ $('ctl').querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>dirIn(b.dataset.d.split(',').map(Number)));
+ const o=(id,f)=>{const e=$(id);if(e)e.onclick=f};
+ o('#b-next',aiStep);o('#b-auto',()=>setAuto(!G.auto));o('#b-aim',()=>{aim=!aim;render()});o('#b-grab',()=>exec({t:'grab'}));o('#b-climb',()=>exec({t:'climb'}));o('#b-hint',hint);
+ o('#b-pause',()=>{G.paused=!G.paused;if(G.paused)clearInterval(timer);else if(G.auto)setAuto(true);render()});
+ o('#b-rst',()=>{if(confirm('Restart this world?'))start(G.cfg,G.seed,G.mode,G.lvl)});
+ o('#b-exit',()=>{if(G.over||confirm('Abandon this game?')){clearInterval(timer);show('menu')}});
+ $('showai').onchange=e=>{G.showAI=e.target.checked;render()};
+ const sp=$('spd');if(sp)sp.oninput=e=>{G.speed=1600-e.target.value;if(G.auto)setAuto(true)};
+}
+function dirIn(d){if(!G||G.mode==='ai')return;if(aim){aim=false;exec({t:'shoot',d})}else exec({t:'move',d})}
+document.addEventListener('keydown',e=>{
+ if(!G||$('game').classList.contains('hide')||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)||e.ctrlKey||e.metaKey)return;
+ const m={ArrowUp:[0,1],w:[0,1],ArrowDown:[0,-1],s:[0,-1],ArrowLeft:[-1,0],a:[-1,0],ArrowRight:[1,0],d:[1,0]},k=e.key.length>1?e.key:e.key.toLowerCase();
+ if(m[k]){e.preventDefault();dirIn(m[k])}
+ else if(k===' '&&G.mode!=='ai'){e.preventDefault();exec({t:'grab'})}
+ else if(k==='f'&&G.mode!=='ai'){aim=!aim;render()}
+ else if(k==='c'&&G.mode!=='ai')exec({t:'climb'});
+ else if(k==='h'&&G.mode==='assist')hint();
+ else if(k==='p')$('b-pause').click();
+});
+function showResult(){
+ const g=G,n=g.cfg.size,v=g.ag.view();
+ $('ov').classList.remove('hide');
+ $('ov').innerHTML='<div class="card"><h2 class="'+(g.win?'win':'lose')+'">'+(g.win?'Victory':'Defeat')+'</h2><p>'+g.msg+'</p><table>'+
+ [['Final score','<b>'+fin()+'</b> (base '+base()+' × '+g.cfg.m+')'],['Best for this mode',g.best],['Time',g.secs+'s'],['Moves',g.moves],['Gold collected',g.w.hasGold?1:0],['Arrows used',g.shots],['Cells explored',g.expl.size+'/'+n*n+' ('+Math.round(g.expl.size/(n*n)*100)+'%)'],['Unnecessary moves (revisits)',g.rev],['Hints used',(g.cfg.hint>90?'—':g.cfg.hint-g.hints)],
+  ...(g.mode==='ai'?[['Cells deduced safe',v.safe.size],['Risky decisions',g.risky],['Pathfinding','BFS over proven-safe cells']]:[])].map(r=>'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td></tr>').join('')+'</table>'+
+ '<div class="row"><button class="pri" id="r-retry">Retry same world</button><button id="r-new">New world</button>'+(g.win&&g.lvl>0&&g.lvl<5?'<button id="r-next">Next level</button>':'')+'<button id="r-map">View full map</button><button id="r-menu">Menu</button></div></div>';
+ const o=(i,f)=>{const e=$(i);if(e)e.onclick=()=>{$('ov').classList.add('hide');f()}};
+ o('#r-retry',()=>start(g.cfg,g.seed,g.mode,g.lvl));o('#r-new',()=>start(g.cfg,Math.floor(Math.random()*1e6),g.mode,g.lvl));
+ o('#r-next',()=>start(LV[g.lvl+1],Math.floor(Math.random()*1e6),g.mode,g.lvl+1));o('#r-map',()=>{});o('#r-menu',()=>show('menu'));
+}
+function lbView(){
+ const fl=$('f-l').value,fm=$('f-m').value;
+ let r=S.scores.filter(x=>(fl===''||x.lvl==fl)&&(!fm||x.mode===fm)).sort((a,b)=>b.score-a.score).slice(0,10);
+ $('lbt').innerHTML=r.length?'<table><tr><th>#</th><th>Name</th><th>Score</th><th>Level</th><th>Mode</th><th>Time</th><th>Moves</th><th>Date</th></tr>'+r.map((x,i)=>'<tr><td>'+(i+1)+'</td><td>'+x.nick.replace(/</g,'&lt;')+'</td><td>'+x.score+'</td><td>'+LV[x.lvl].n+' '+x.size+'²</td><td>'+x.mode+'</td><td>'+x.secs+'s</td><td>'+x.moves+'</td><td>'+x.date+'</td></tr>').join('')+'</table>':'<p>No records yet.</p>';
+ const a=S.scores,wins=a.filter(x=>x.win);
+ const avg=(l,f)=>l.length?Math.round(l.reduce((s,x)=>s+f(x),0)/l.length):'–';
+ const fav=Object.entries(a.reduce((m,x)=>(m[x.lvl]=(m[x.lvl]||0)+1,m),{})).sort((p,q)=>q[1]-p[1])[0];
+ const bySize={};a.forEach(x=>{const s=bySize[x.size]=bySize[x.size]||{g:0,w:0};s.g++;if(x.win)s.w++});
+ $('stt').innerHTML='<table>'+[['Games played',a.length],['Victories',wins.length],['Win rate',a.length?Math.round(wins.length/a.length*100)+'%':'–'],['Highest score',a.length?Math.max(...a.map(x=>x.score)):'–'],['Best victory time',wins.length?Math.min(...wins.map(x=>x.secs))+'s':'–'],['Average moves per victory',avg(wins,x=>x.moves)],['Treasure collected',a.reduce((s,x)=>s+x.gold,0)],['Favourite difficulty',fav?LV[fav[0]].n:'–']].map(r=>'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td></tr>').join('')+'</table><h3 style="margin-top:10px">By grid size</h3><table>'+Object.entries(bySize).map(([k,s])=>'<tr><td>'+k+'×'+k+'</td><td>'+s.w+'/'+s.g+' won</td></tr>').join('')+'</table>';
+}
+function show(id){['menu','game','lb','how'].forEach(s=>$('#'+s).classList.toggle('hide',s!==id));$('ov').classList.add('hide');if(id==='lb')lbView()}
+function cfgFromMenu(){
+ const b=LV[sel];if(sel!==0)return{cfg:{...b}};
+ const c={...b,size:+$('cs').value,w:+$('cw').value,p:+$('cp').value,a:+$('ca').value};
+ if(!(c.size>=4&&c.size<=20))return{err:'Grid size must be 4 to 20.'};
+ if(!(c.w>=1)||c.p<0||c.a<0)return{err:'Need at least 1 Wumpus, and no negative pits or arrows.'};
+ const room=c.size*c.size-4;if(c.w+c.p>room)return{err:'Too many hazards. Maximum for this grid is '+room+'.'};
+ return{cfg:c};
+}
+function updPrev(){
+ document.querySelectorAll('#lvs button').forEach(b=>b.classList.toggle('on',+b.dataset.l===sel));
+ $('cust').classList.toggle('hide',sel!==0);
+ const r=cfgFromMenu();$('err').textContent=r.err||'';
+ $('prev').textContent=r.cfg?r.cfg.size+'×'+r.cfg.size+' · '+r.cfg.w+' Wumpus · '+r.cfg.p+' pits · '+r.cfg.a+' arrows · hazard density '+Math.round((r.cfg.w+r.cfg.p)/(r.cfg.size**2)*100)+'% · score ×'+r.cfg.m:'';
+}
+$('lvs').innerHTML=[1,2,3,4,5,0].map(l=>'<button data-l="'+l+'">'+LV[l].n+'<small>'+(l?LV[l].size+'×'+LV[l].size:'4–20')+'</small></button>').join('');
+$('lvs').onclick=e=>{const b=e.target.closest('button');if(b){sel=+b.dataset.l;updPrev()}};
+['cs','cw','cp','ca'].forEach(i=>$(i).oninput=updPrev);
+$('modes').innerHTML=[['manual','Manual'],['assist','Assisted AI'],['ai','Autonomous AI']].map(m=>'<button data-m="'+m[0]+'">'+m[1]+'</button>').join('');
+$('modes').onclick=e=>{const b=e.target.closest('button');if(b){mode=b.dataset.m;document.querySelectorAll('#modes button').forEach(x=>x.classList.toggle('on',x===b))}};
+document.querySelector('#modes button').classList.add('on');
+$('nick').value=S.nick;$('nick').onchange=e=>{S.nick=e.target.value.trim()||'Explorer';save()};
+$('calm').checked=!!S.calm;document.body.classList.toggle('calm',!!S.calm);
+$('calm').onchange=e=>{S.calm=e.target.checked;document.body.classList.toggle('calm',S.calm);save()};
+$('daily').onclick=()=>{$('seed').value=+new Date().toISOString().slice(0,10).replace(/-/g,'')};
+$('play').onclick=()=>{const r=cfgFromMenu();if(r.err){$('err').textContent=r.err;return}
+ S.nick=$('nick').value.trim()||'Explorer';save();
+ const sv=parseInt($('seed').value,10);try{start(r.cfg,isNaN(sv)?Math.floor(Math.random()*1e6):sv,mode,sel)}catch(e){$('err').textContent=e.message}};
+$('b-lb').onclick=()=>show('lb');$('b-how').onclick=()=>show('how');$('b-back').onclick=$('b-back2').onclick=()=>show('menu');
+$('f-l').innerHTML='<option value="">All difficulties</option>'+[1,2,3,4,5,0].map(l=>'<option value="'+l+'">'+LV[l].n+'</option>').join('');
+$('f-l').onchange=$('f-m').onchange=lbView;
+$('b-clr').onclick=()=>{if(confirm('Delete all scores and statistics? This cannot be undone.')){S.scores=[];save();lbView()}};
+updPrev();
+</script></body></html>
